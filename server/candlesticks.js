@@ -9,7 +9,7 @@ Meteor.startup(function() {
     
     var start = last ?
                 moment(last.date) :
-                moment().subtract(30, "days");
+                moment().subtract(120, "days");
     var end = moment();
 
     var result = OANDA.getCandles({

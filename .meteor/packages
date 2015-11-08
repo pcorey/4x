@@ -20,3 +20,7 @@ percolate:synced-cron
 http
 momentjs:moment
 matb33:collection-hooks
+meteorhacks:npm
+
+
+npm-container

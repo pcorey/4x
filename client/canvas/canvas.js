@@ -35,7 +35,7 @@ function buildCandle(data, index, scale) {
       minima.fillColor = 'lightblue';
       group.addChild(minima);
     }
-    else if (Maxima.findOne({
+    if (Maxima.findOne({
       candlestickId: data._id
     })) {
       var maxima = new Path.Circle(new Point(20, 0), 10);
