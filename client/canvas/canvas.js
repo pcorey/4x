@@ -44,7 +44,7 @@ function buildCandle(data, index, scale) {
       group.addChild(maxima);
     }
 
-    group.translate(new Point(index * -60, high));
+    group.translate(new Point(index * -60, -high));
     return group;
   }
 }
@@ -98,7 +98,7 @@ Template.canvas.onRendered(function() {
         // candle.scale(1, view.size.height / height);
       });
 
-      view.center = new Point(0, candles[0].highMid * scale);
+      view.center = new Point(0, -candles[0].highMid * scale);
       view.zoom = 0.25;
       V = view;
       P = paper;
