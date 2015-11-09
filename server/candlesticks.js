@@ -24,11 +24,6 @@ Meteor.startup(function() {
       result.data.candles.map(function(candle) {
         Candlesticks.insertOandaCandle(candle, result);
       });
-      Candlesticks.calculateMinimaMaxima(Candlesticks.find({
-        date: {
-          $gte: start.toDate()
-        }
-      }).fetch());
     }
     else {
       console.log("No results!")

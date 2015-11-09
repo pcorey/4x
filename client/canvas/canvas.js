@@ -1,3 +1,31 @@
+Template.canvas.onCreated(function() {
+  this.zoomer = new SimplePanAndZoom();
+  var subscriptions = [
+    this.subscribe("candlesticks"),
+    this.subscribe("minima"),
+    this.subscribe("maxima"),
+    this.subscribe("longTrendlines")
+  ];
+
+  this.ready = function() {
+    return subscriptions.reduce(function(ready, sub) {
+      return ready && sub.ready();
+    }, true);
+  };
+});
+
+function candleToPoint(candle, scale) {
+  var candlesticks = Candlesticks.find({}, {
+    sort: {
+      date: -1
+    }
+  }).fetch();
+  var ids = _.pluck(candlesticks, "_id");
+  var index = ids.indexOf(candle.candlestickId);
+  var x = index * -60;
+  return new paper.Point(x, -candle.lowMid * scale);
+}
+
 function buildCandle(data, index, scale) {
   var high = data.highMid * scale;
   var low = data.lowMid * scale;
@@ -10,22 +38,18 @@ function buildCandle(data, index, scale) {
     var candle = new Path.Rectangle(
         new Point(0, high - Math.max(open, close)),
         new Size(40, Math.max(open, close) - Math.min(open, close)));
-    wick.fillColor = '#aaa';
-    // wick.strokeColor = '#888';
-    // candle.strokeColor = '#888';
-    candle.fillColor = '#444';
-
-    if (open >= close) {
-      candle.fillColor = "#E4572E";
-    }
-    else {
-      candle.fillColor = "#76B041";
-    }
 
     var group = new Group([
         wick,
         candle
     ]);
+
+    if (open >= close) {
+      group.fillColor = "#E4572E";
+    }
+    else {
+      group.fillColor = "#76B041";
+    }
 
     if (Minima.findOne({
       candlestickId: data._id
@@ -48,21 +72,6 @@ function buildCandle(data, index, scale) {
     return group;
   }
 }
-
-Template.canvas.onCreated(function() {
-  this.zoomer = new SimplePanAndZoom();
-  var subscriptions = [
-    this.subscribe("candlesticks"),
-    this.subscribe("minima"),
-    this.subscribe("maxima")
-  ];
-
-  this.ready = function() {
-    return subscriptions.reduce(function(ready, sub) {
-      return ready && sub.ready();
-    }, true);
-  };
-});
 
 Template.canvas.onRendered(function() {
   with (paper) {
@@ -96,6 +105,17 @@ Template.canvas.onRendered(function() {
       candles.forEach(function(data, index) {
         var candle = buildCandle(data, index, scale);
         // candle.scale(1, view.size.height / height);
+      });
+
+      LongTrendlines.find({
+        $where: "this.candles.length > 2"
+      }).fetch().map(function(trendline) {
+        var from = _.first(trendline.candles);
+        var to = _.last(trendline.candles);
+        var line = new Path.Line(candleToPoint(from, scale),
+                                 candleToPoint(to, scale));
+        line.strokeColor = 'lightblue';
+        line.strokeWidth = 5;
       });
 
       view.center = new Point(0, -candles[0].highMid * scale);

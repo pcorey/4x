@@ -9,3 +9,7 @@ Meteor.publish("minima", function() {
 Meteor.publish("maxima", function() {
   return Maxima.find();
 });
+
+Meteor.publish("longTrendlines", function() {
+  return LongTrendlines.find();
+});
