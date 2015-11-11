@@ -14,7 +14,7 @@ Template.canvas.onCreated(function() {
   };
 });
 
-function candleToPoint(candle, scale) {
+function candleToPoint(candle, scale, line) {
   var candlesticks = Candlesticks.find({}, {
     sort: {
       date: -1
@@ -23,7 +23,11 @@ function candleToPoint(candle, scale) {
   var ids = _.pluck(candlesticks, "_id");
   var index = ids.indexOf(candle.candlestickId);
   var x = index * -60;
-  return new paper.Point(x, -candle.lowMid * scale);
+  var y = -candle.lowMid * scale;
+  if (line) {
+    y = -(line.m * candle.index + line.b) * scale;
+  }
+  return new paper.Point(x + 20, y);
 }
 
 function buildCandle(data, index, scale) {
@@ -100,7 +104,7 @@ Template.canvas.onRendered(function() {
       var high = Candlesticks.findOne({}, {$sort: {highMid: -1}}).highMid;
       var low = Candlesticks.findOne({}, {$sort: {lowMid: 1}}).lowMid;
       var height = high - low;
-      var scale = 10000;
+      var scale = 1000000;
 
       candles.forEach(function(data, index) {
         var candle = buildCandle(data, index, scale);
@@ -108,14 +112,22 @@ Template.canvas.onRendered(function() {
       });
 
       LongTrendlines.find({
+        // broken: {$ne: true},
         $where: "this.candles.length > 2"
       }).fetch().map(function(trendline) {
         var from = _.first(trendline.candles);
         var to = _.last(trendline.candles);
         var line = new Path.Line(candleToPoint(from, scale),
-                                 candleToPoint(to, scale));
-        line.strokeColor = 'lightblue';
-        line.strokeWidth = 5;
+                                 candleToPoint(to, scale, trendline.line));
+        if (trendline.broken) {
+          line.strokeColor = 'pink';
+          line.strokeWidth = 1;
+        }
+        else {
+          line.strokeColor = 'lightblue';
+          var candles = trendline.candles.length;
+          line.strokeWidth = candles <= 2 ? 1 : candles * 10;
+        }
       });
 
       view.center = new Point(0, -candles[0].highMid * scale);
