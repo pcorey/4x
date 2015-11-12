@@ -18,7 +18,7 @@ Template.canvas.onCreated(function() {
   };
 });
 
-function candleToPoint(candle, scale, long, line) {
+function candleToPoint(candle, scale, long, line, broken) {
   var candlesticks = Candlesticks.find({}, {
     sort: {
       date: -1
@@ -30,7 +30,13 @@ function candleToPoint(candle, scale, long, line) {
   var y = long ? (-candle.lowMid * scale) :
                  (-candle.highMid * scale);
   if (line) {
-    y = -(line.m * candle.index + line.b) * scale;
+    if (broken) {
+      y = -(line.m * candle.index + line.b) * scale;
+    }
+    else {
+      x = 0;
+      y = -(line.m * candlesticks[0].index + line.b) * scale;
+    }
   }
   return new paper.Point(x + 20, y);
 }
@@ -144,11 +150,12 @@ Template.canvas.onRendered(function() {
         var from = _.first(trendline.candles);
         var to = _.last(trendline.candles);
         var line = new Path.Line(candleToPoint(from, scale, true),
-                                 candleToPoint(to, scale, true, trendline.line));
+                                 candleToPoint(to, scale, true,
+                                   trendline.line, trendline.broken));
         line._id = trendline._id;
         if (trendline.broken) {
           line.strokeColor = 'pink';
-          line.opacity = 0.25;
+          line.opacity = 0.125;
         }
         else {
           line.strokeColor = 'lightblue';
@@ -163,11 +170,12 @@ Template.canvas.onRendered(function() {
         var from = _.first(trendline.candles);
         var to = _.last(trendline.candles);
         var line = new Path.Line(candleToPoint(from, scale, false),
-                                 candleToPoint(to, scale, false, trendline.line));
+                                 candleToPoint(to, scale, false,
+                                   trendline.line, trendline.broken));
         line._id = trendline._id;
         if (trendline.broken) {
           line.strokeColor = 'pink';
-          line.opacity = 0.25;
+          line.opacity = 0.125;
         }
         else {
           line.strokeColor = 'lightgreen';
