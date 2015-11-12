@@ -13,3 +13,7 @@ Meteor.publish("maxima", function() {
 Meteor.publish("longTrendlines", function() {
   return LongTrendlines.find();
 });
+
+Meteor.publish("shortTrendlines", function() {
+  return ShortTrendlines.find();
+});

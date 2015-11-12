@@ -9,7 +9,7 @@ function getCandles() {
     
     var start = last ?
                 moment(last.date) :
-                moment().subtract(8, "hours");
+                moment().subtract(24, "hours");
     var end = moment();
 
     var result = OANDA.getCandles(instrument, {

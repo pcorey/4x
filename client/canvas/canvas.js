@@ -6,7 +6,8 @@ Template.canvas.onCreated(function() {
     this.subscribe("candlesticks"),
     this.subscribe("minima"),
     this.subscribe("maxima"),
-    this.subscribe("longTrendlines")
+    this.subscribe("longTrendlines"),
+    this.subscribe("shortTrendlines")
   ];
 
   this.ready = function() {
@@ -16,7 +17,7 @@ Template.canvas.onCreated(function() {
   };
 });
 
-function candleToPoint(candle, scale, line) {
+function candleToPoint(candle, scale, long, line) {
   var candlesticks = Candlesticks.find({}, {
     sort: {
       date: -1
@@ -25,7 +26,8 @@ function candleToPoint(candle, scale, line) {
   var ids = _.pluck(candlesticks, "_id");
   var index = ids.indexOf(candle.candlestickId);
   var x = index * -60;
-  var y = -candle.lowMid * scale;
+  var y = long ? (-candle.lowMid * scale) :
+                 (-candle.highMid * scale);
   if (line) {
     y = -(line.m * candle.index + line.b) * scale;
   }
@@ -114,19 +116,36 @@ Template.canvas.onRendered(function() {
       });
 
       LongTrendlines.find({
-        // broken: {$ne: true},
         $where: "this.candles.length > 2"
       }).fetch().map(function(trendline) {
         var from = _.first(trendline.candles);
         var to = _.last(trendline.candles);
-        var line = new Path.Line(candleToPoint(from, scale),
-                                 candleToPoint(to, scale, trendline.line));
+        var line = new Path.Line(candleToPoint(from, scale, true),
+                                 candleToPoint(to, scale, true, trendline.line));
         if (trendline.broken) {
           line.strokeColor = 'pink';
           line.strokeWidth = 1;
         }
         else {
           line.strokeColor = 'lightblue';
+          var candles = trendline.candles.length;
+          line.strokeWidth = candles <= 2 ? 1 : candles * 10;
+        }
+      });
+
+      ShortTrendlines.find({
+        $where: "this.candles.length > 2"
+      }).fetch().map(function(trendline) {
+        var from = _.first(trendline.candles);
+        var to = _.last(trendline.candles);
+        var line = new Path.Line(candleToPoint(from, scale, false),
+                                 candleToPoint(to, scale, false, trendline.line));
+        if (trendline.broken) {
+          line.strokeColor = 'pink';
+          line.strokeWidth = 1;
+        }
+        else {
+          line.strokeColor = 'lightgreen';
           var candles = trendline.candles.length;
           line.strokeWidth = candles <= 2 ? 1 : candles * 10;
         }
