@@ -1,5 +1,7 @@
 Template.canvas.onCreated(function() {
   this.zoomer = new SimplePanAndZoom();
+  this.center = new ReactiveVar(undefined);
+  this.zoom = new ReactiveVar(undefined);
   var subscriptions = [
     this.subscribe("candlesticks"),
     this.subscribe("minima"),
@@ -130,8 +132,16 @@ Template.canvas.onRendered(function() {
         }
       });
 
-      view.center = new Point(0, -candles[0].highMid * scale);
-      view.zoom = 0.25;
+      Tracker.nonreactive(() => {
+        if (!this.center.get()) {
+          this.center.set(new Point(0, -candles[0].highMid * scale));
+        }
+        if (!this.zoom.get()) {
+          this.zoom.set(0.25);
+        }
+        view.center = new Point(this.center.get());
+        view.zoom = this.zoom.get();
+      });
       V = view;
       P = paper;
       view.draw();
@@ -142,14 +152,16 @@ Template.canvas.onRendered(function() {
 Template.canvas.events({
   'mousewheel #canvas': function(e, t) {
     if (e.shiftKey) {
-      paper.view.zoom = t.zoomer.changeZoom(paper.view.zoom, -e.deltaY);
+      t.zoom.set(t.zoomer.changeZoom(paper.view.zoom, -e.deltaY));
     }
     else {
-      paper.view.center = t.zoomer.changeCenter(paper.view.center,
-                                                e.deltaX,
-                                                e.deltaY,
-                                                e.deltaFactor);
+      t.center.set(t.zoomer.changeCenter(paper.view.center,
+                                         e.deltaX,
+                                         e.deltaY,
+                                         e.deltaFactor));
     }
+    paper.view.zoom = t.zoom.get();
+    paper.view.center = t.center.get();
     e.preventDefault();
   }
 });

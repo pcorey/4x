@@ -1,6 +1,6 @@
 var instruments = Meteor.settings.public.instruments || [];
 
-Meteor.startup(function() {
+function getCandles() {
   instruments.forEach(function(instrument) {
     console.log(`Getting candles for ${instrument}.`);
     var last = Candlesticks.mostRecent({
@@ -28,4 +28,16 @@ Meteor.startup(function() {
       console.log("No results!")
     }
   });
+}
+
+Meteor.startup(getCandles);
+
+SyncedCron.add({
+  name: "Get candles",
+  schedule: function(parser) {
+    return parser.text("every 5 minutes");
+  },
+  job: getCandles
 });
+
+SyncedCron.start();

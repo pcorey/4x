@@ -11,7 +11,7 @@ Package.describe({
 });
 
 Npm.depends({
-  "node-oanda": "https://github.com/pcorey/node-oanda/archive/4d5916f039cf44cef40d1785a6621439a3cea9f5.tar.gz"
+  "node-oanda": "https://github.com/pcorey/node-oanda/archive/3e363a90e2c0fa37cb79f4edb8b1dbe1be04127a.tar.gz"
 });
 
 Package.onUse(function(api) {

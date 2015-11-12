@@ -25,3 +25,5 @@ meteorhacks:npm
 
 npm-container
 oanda
+reactive-var
+dburles:collection-helpers

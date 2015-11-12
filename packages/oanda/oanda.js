@@ -24,7 +24,7 @@ OANDA.getCandles = function(instrument, options) {
   return future.wait();
 };
 
-OANDA.buy = function(instrument, units, options) {
+OANDA.long = function(instrument, units, options) {
   var future = new Future();
   var request = OANDA.orders.createNewOrder(
     Meteor.settings.OANDA_ACCOUNT,
