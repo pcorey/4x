@@ -2,6 +2,7 @@ Template.canvas.onCreated(function() {
   this.zoomer = new SimplePanAndZoom();
   this.center = new ReactiveVar(undefined);
   this.zoom = new ReactiveVar(undefined);
+  this.selected = new ReactiveVar(undefined);
   var subscriptions = [
     this.subscribe("candlesticks"),
     this.subscribe("minima"),
@@ -52,6 +53,18 @@ function buildCandle(data, index, scale) {
         candle
     ]);
 
+    var selected = Template.instance().selected.get();
+    var selectedTrendline = LongTrendlines.findOne({
+      _id: selected,
+      "candles.candlestickId": data._id
+    }) || ShortTrendlines.findOne({
+      _id: selected,
+      "candles.candlestickId": data._id
+    });
+    if (selected && selectedTrendline) {
+      group.selected = true;
+    }
+
     if (open >= close) {
       group.fillColor = "#E4572E";
     }
@@ -85,6 +98,16 @@ Template.canvas.onRendered(function() {
   with (paper) {
     var canvas = $('#canvas')[0];
     setup(canvas);
+
+    var tool = new Tool();
+    tool.onMouseDown = function(event) {
+      project.activeLayer.selected = false;
+      if (event.item) {
+        event.item.selected = true;
+        this.selected.set(event.item._id);
+        console.log("Selected", event.item._id);
+      }
+    }.bind(this);
     
     this.autorun(() => {
       if (!this.ready()) {
@@ -122,15 +145,16 @@ Template.canvas.onRendered(function() {
         var to = _.last(trendline.candles);
         var line = new Path.Line(candleToPoint(from, scale, true),
                                  candleToPoint(to, scale, true, trendline.line));
+        line._id = trendline._id;
         if (trendline.broken) {
           line.strokeColor = 'pink';
-          line.strokeWidth = 1;
+          line.opacity = 0.25;
         }
         else {
           line.strokeColor = 'lightblue';
-          var candles = trendline.candles.length;
-          line.strokeWidth = candles <= 2 ? 1 : candles * 10;
         }
+        var candles = trendline.candles.length;
+        line.strokeWidth = candles <= 2 ? 1 : candles * 10;
       });
 
       ShortTrendlines.find({
@@ -140,15 +164,16 @@ Template.canvas.onRendered(function() {
         var to = _.last(trendline.candles);
         var line = new Path.Line(candleToPoint(from, scale, false),
                                  candleToPoint(to, scale, false, trendline.line));
+        line._id = trendline._id;
         if (trendline.broken) {
           line.strokeColor = 'pink';
-          line.strokeWidth = 1;
+          line.opacity = 0.25;
         }
         else {
           line.strokeColor = 'lightgreen';
-          var candles = trendline.candles.length;
-          line.strokeWidth = candles <= 2 ? 1 : candles * 10;
         }
+        var candles = trendline.candles.length;
+        line.strokeWidth = candles <= 2 ? 1 : candles * 10;
       });
 
       Tracker.nonreactive(() => {
