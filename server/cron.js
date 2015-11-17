@@ -9,7 +9,7 @@ function getCandles() {
     
     var start = last ?
                 moment(last.date) :
-                moment().subtract(24, "hours");
+                moment().subtract(60, "minutes");
     var end = moment();
 
     var result = OANDA.getCandles(instrument, {
@@ -35,7 +35,7 @@ Meteor.startup(getCandles);
 SyncedCron.add({
   name: "Get candles",
   schedule: function(parser) {
-    return parser.text("every 5 minutes");
+    return parser.text("every 30 seconds");
   },
   job: getCandles
 });
